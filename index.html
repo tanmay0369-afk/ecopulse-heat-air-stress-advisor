@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heat-Air Stress Advisor (Prototype)</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1f2a37;--mute:#5b6675;--bd:#d5dbe3;--c0:#2f9e44;--c1:#f2c200;--c2:#f76707;--c3:#e03131;--ac:#0b7285;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b222b;--tx:#e8ecf1;--mute:#9aa6b5;--bd:#2c3642;--ac:#3bc9db;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b222b;--tx:#e8ecf1;--mute:#9aa6b5;--bd:#2c3642;--ac:#3bc9db;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif}
+main{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:6px 0 2px}.sub{color:var(--mute);font-size:13px;margin:0 0 10px}
+.banner{background:var(--card);border:1px dashed var(--c2);border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:480px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+select,input[type=number]{width:100%;padding:9px;border-radius:9px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+input[type=range]{width:100%}
+.lang{display:flex;gap:6px;margin-bottom:10px}.lang button{flex:1;padding:8px;border-radius:9px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;cursor:pointer}
+.lang button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#score{border-radius:14px;padding:14px;color:#fff;margin-bottom:12px}
+#score .big{font-size:26px;font-weight:700;line-height:1.15}#score .meta{font-size:13px;opacity:.95;margin-top:4px}
+#advice{margin:8px 0 0;padding-left:18px}#advice li{margin:3px 0}
+.tl{display:grid;grid-template-columns:repeat(16,1fr);gap:3px}
+.tl button{border:0;border-radius:6px;padding:8px 0;color:#fff;font:600 11px system-ui;cursor:pointer;min-width:0}
+.tl button.sel{outline:3px solid var(--tx);outline-offset:1px}
+.tl small{display:block;font-weight:400;font-size:9px;opacity:.9}
+.win{font-size:14px;margin:8px 0 0}.mute{color:var(--mute);font-size:12px}
+</style></head><body><main>
+<h1 id="t">Heat-Air Stress Advisor</h1><p class="sub" id="st"></p>
+<div class="banner" id="bn"></div>
+<div class="lang"><button id="le" class="on">English</button><button id="lh">हिंदी</button></div>
+<div class="card"><div class="grid">
+<div><label id="l1"></label><select id="sc"><option value="summer"></option><option value="smog"></option><option value="humid"></option><option value="mild"></option><option value="manual"></option></select></div>
+<div><label id="l2"></label><select id="job"></select></div>
+<div><label id="l3"></label><select id="al"><option value="none"></option><option value="yellow"></option><option value="orange"></option><option value="red"></option></select></div>
+<div id="hrbox"><label id="l4"></label><input type="range" id="hr" min="6" max="21" value="12"><div class="mute" id="hrv"></div></div>
+</div>
+<div class="grid" id="man" style="margin-top:10px;display:none">
+<div><label id="m1"></label><input type="number" id="mt" value="42" min="0" max="55"></div>
+<div><label id="m2"></label><input type="number" id="mr" value="25" min="1" max="100"></div>
+<div><label id="m3"></label><input type="number" id="mp" value="80" min="0" max="999"></div></div></div>
+<div id="score"><div class="big" id="sb"></div><div class="meta" id="sm"></div><ul id="advice"></ul></div>
+<div class="card" id="tlc"><b id="tt"></b><div class="tl" id="tl" style="margin-top:8px"></div><div class="win" id="w1"></div><div class="win" id="w2"></div></div>
+<p class="mute" id="ft"></p>
+</main>
+<script>
+const D={summer:[[33.1,36,96],[31.9,38,91],[31.2,40,85],[31.0,40,78],[31.2,40,70],[31.9,38,62],[33.1,36,55],[34.5,34,49],[36.2,31,44],[38.0,28,41],[39.8,24,40],[41.5,21,41],[42.9,19,44],[44.1,17,49],[44.8,15,55],[45.0,15,62],[44.8,15,70],[44.1,17,78],[42.9,19,85],[41.5,21,91],[39.8,24,96],[38.0,28,99],[36.2,31,100],[34.5,34,99]],smog:[[10.8,81,215],[9.8,83,232],[9.2,84,250],[9.0,85,268],[9.2,84,285],[9.8,83,299],[10.8,81,311],[12.0,78,318],[13.4,74,320],[15.0,70,318],[16.6,66,311],[18.0,62,299],[19.2,59,285],[20.2,57,268],[20.8,56,250],[21.0,55,232],[20.8,56,215],[20.2,57,201],[19.2,59,189],[18.0,62,182],[16.6,66,180],[15.0,70,182],[13.4,74,189],[12.0,78,201]],humid:[[30.2,75,50],[29.5,78,55],[29.1,79,60],[29.0,80,65],[29.1,79,70],[29.5,78,74],[30.2,75,77],[31.0,71,79],[32.0,67,80],[33.0,62,79],[34.0,58,77],[35.0,54,74],[35.8,50,70],[36.5,47,65],[36.9,46,60],[37.0,45,55],[36.9,46,50],[36.5,47,46],[35.8,50,43],[35.0,54,41],[34.0,58,40],[33.0,62,41],[32.0,67,43],[31.0,71,46]],mild:[[18.5,56,32],[17.7,58,36],[17.2,60,40],[17.0,60,44],[17.2,60,48],[17.7,58,51],[18.5,56,53],[19.5,54,54],[20.7,51,55],[22.0,48,54],[23.3,44,53],[24.5,41,51],[25.5,39,48],[26.3,37,44],[26.8,35,40],[27.0,35,36],[26.8,35,32],[26.3,37,29],[25.5,39,27],[24.5,41,26],[23.3,44,25],[22.0,48,26],[20.7,51,27],[19.5,54,29]]};
+const JOBS=["delivery_rider","construction","street_vendor","driver","security_guard","sanitation"],HEX=["delivery_rider","construction","sanitation"];
+const COL=["var(--c0)","var(--c1)","var(--c2)","var(--c3)"];
+function hic(c,rh){const t=c*9/5+32,s=.5*(t+61+(t-68)*1.2+rh*.094);let h;if((s+t)/2<80)h=s;else{h=-42.379+2.04901523*t+10.14333127*rh-.22475541*t*rh-.00683783*t*t-.05481717*rh*rh+.00122874*t*t*rh+.00085282*t*rh*rh-.00000199*t*t*rh*rh;if(rh<13&&t>=80&&t<=112)h-=((13-rh)/4)*Math.sqrt((17-Math.abs(t-95))/17);else if(rh>85&&t>=80&&t<=87)h+=((rh-85)/10)*((87-t)/5)}return(h-32)*5/9}
+function hl(h,a){let l=h<32?0:h<39?1:h<51?2:3;if(a==="orange")l=Math.max(l,2);if(a==="red")l=3;return l}
+function al(p){return p<=60?0:p<=90?1:p<=120?2:3}
+function comb(h,a,j){let b=Math.max(h,a);if(h>=2&&a>=2)b=Math.min(3,b+1);if(HEX.includes(j)&&b>=1)b=Math.min(3,b+1);return b}
+function st(t,rh,pm,j,a){const hi=hic(t,rh),h=hl(hi,a),r=al(pm);return{hi:Math.round(hi*10)/10,h,r,s:comb(h,r,j)}}
+function runs(a){const o=[];a.sort((x,y)=>x-y).forEach(h=>{if(o.length&&h===o[o.length-1][1])o[o.length-1][1]=h+1;else o.push([h,h+1])});return o}
+const T={en:{t:"Heat-Air Stress Advisor",st:"Combined heat and air-quality stress score for outdoor workers in Delhi-NCR",
+bn:"PROTOTYPE with SIMULATED sample days, not live measurements. The Python version fetches live Open-Meteo data. This is general advice, not medical advice.",
+l1:"Scenario (simulated)",sc:["Summer heatwave day","Winter smog day","Humid pre-monsoon day","Mild day","Enter my own values"],
+l2:"Job",jobs:["Delivery rider","Construction worker","Street vendor","Auto / cab driver","Security guard","Sanitation worker"],
+l3:"Official IMD heat alert",al:["No alert","Yellow","Orange","Red"],l4:"Hour of day",
+m1:"Temperature (°C)",m2:"Humidity (%)",m3:"PM2.5 (µg/m³)",
+lv:["LOW","MODERATE","HIGH","SEVERE"],hd:["Normal precautions","Take care","Protect yourself","Avoid heavy work"],
+meta:(x,h)=>`Heat index ${x.hi} °C · Heat level ${x.h} · Air level ${x.r}`,
+heat:"Drink water often, even if not thirsty. Rest in shade. Cover your head.",air:"Air is poor: wear a well-fitting mask if you have one, and avoid heavy exertion near heavy traffic.",sev:"If you feel dizzy, confused, faint or very unwell, stop, move to shade and seek medical help.",
+tt:"Stress score by hour (tap an hour)",w1:r=>r.length?"Safer hours to work: "+r:"No clearly safer window today.",w2:r=>r.length?"Best hours to rest: "+r:"No rest period flagged.",
+ft:"Score levels: 0 Low, 1 Moderate, 2 High, 3 Severe. Rules: base = higher of heat and air; +1 if both are High or more; +1 for high-exertion jobs. Thresholds are a starting design pending review against IMD/NCDC guidance.",stress:"stress"},
+hi:{t:"हीट-एयर स्ट्रेस एडवाइज़र",st:"दिल्ली-एनसीआर के बाहर काम करने वालों के लिए गर्मी और हवा का संयुक्त तनाव स्कोर",
+bn:"यह प्रोटोटाइप है और इसमें नकली (सिम्युलेटेड) नमूना दिन हैं, असली माप नहीं। यह सामान्य सलाह है, चिकित्सा सलाह नहीं।",
+l1:"स्थिति (नकली नमूना)",sc:["गर्मी की लू वाला दिन","सर्दी में धुंध वाला दिन","उमस भरा मॉनसून-पूर्व दिन","सामान्य दिन","अपने आँकड़े डालें"],
+l2:"काम",jobs:["डिलीवरी राइडर","निर्माण मज़दूर","रेहड़ी-पटरी वाला","ऑटो / कैब चालक","सुरक्षा गार्ड","सफ़ाई कर्मचारी"],
+l3:"IMD की आधिकारिक गर्मी चेतावनी",al:["कोई चेतावनी नहीं","पीला","नारंगी","लाल"],l4:"दिन का घंटा",
+m1:"तापमान (°C)",m2:"नमी (%)",m3:"PM2.5 (µg/m³)",
+lv:["कम","मध्यम","ज़्यादा","बहुत ज़्यादा"],hd:["सामान्य सावधानी","सावधानी रखें","खुद को बचाएँ","भारी काम से बचें"],
+meta:(x,h)=>`हीट इंडेक्स ${x.hi} °C · गर्मी स्तर ${x.h} · हवा स्तर ${x.r}`,
+heat:"प्यास न लगे तब भी बार-बार पानी पिएँ। छाया में आराम करें। सिर ढकें।",air:"हवा खराब है: मास्क हो तो ठीक से पहनें और भारी ट्रैफ़िक के पास भारी मेहनत से बचें।",sev:"चक्कर, उलझन, बेहोशी या बहुत बुरा लगे तो रुकें, छाया में जाएँ और डॉक्टरी मदद लें।",
+tt:"घंटे के अनुसार तनाव स्कोर (घंटे पर टैप करें)",w1:r=>r.length?"काम के लिए बेहतर घंटे: "+r:"आज कोई साफ़ तौर पर सुरक्षित समय नहीं।",w2:r=>r.length?"आराम के लिए सबसे ज़रूरी घंटे: "+r:"कोई आराम अवधि चिह्नित नहीं।",
+ft:"स्तर: 0 कम, 1 मध्यम, 2 ज़्यादा, 3 बहुत ज़्यादा। नियम: गर्मी और हवा में से ऊँचा स्तर; दोनों ज़्यादा हों तो +1; भारी मेहनत वाले काम में +1। सीमाएँ अभी IMD/NCDC मार्गदर्शन से जाँचनी बाकी हैं।"}};
+let L="en";const $=i=>document.getElementById(i);
+function fmt(r){return r.map(x=>`${x[0]}:00–${x[1]}:00`).join(", ")}
+function render(){const t=T[L],sc=$("sc").value,j=JOBS[$("job").selectedIndex],a=$("al").value,man=sc==="manual";
+document.documentElement.lang=L==="hi"?"hi":"en";
+$("t").textContent=t.t;$("st").textContent=t.st;$("bn").textContent=t.bn;$("l1").textContent=t.l1;$("l2").textContent=t.l2;$("l3").textContent=t.l3;$("l4").textContent=t.l4;$("m1").textContent=t.m1;$("m2").textContent=t.m2;$("m3").textContent=t.m3;$("tt").textContent=t.tt;$("ft").textContent=t.ft;
+[...$("sc").options].forEach((o,i)=>o.textContent=t.sc[i]);[...$("job").options].forEach((o,i)=>o.textContent=t.jobs[i]);[...$("al").options].forEach((o,i)=>o.textContent=t.al[i]);
+$("man").style.display=man?"grid":"none";$("hrbox").style.display=man?"none":"block";$("tlc").style.display=man?"none":"block";
+const hr=+$("hr").value;$("hrv").textContent=hr+":00";let x;
+if(man){x=st(+$("mt").value,+$("mr").value,+$("mp").value,j,a)}
+else{const d=D[sc];x=st(d[hr][0],d[hr][1],d[hr][2],j,a);
+ const sc_=[];for(let h=6;h<22;h++){const v=d[h];sc_.push({h,s:st(v[0],v[1],v[2],j,a).s})}
+ const lo=Math.min(...sc_.map(e=>e.s)),hi=Math.max(...sc_.map(e=>e.s));
+ $("tl").innerHTML="";sc_.forEach(e=>{const b=document.createElement("button");b.style.background=COL[e.s];if(e.s===1)b.style.color="#222";if(e.h===hr)b.className="sel";b.innerHTML=e.h+"<small>L"+e.s+"</small>";b.onclick=()=>{$("hr").value=e.h;render()};$("tl").appendChild(b)});
+ $("w1").textContent=t.w1(lo===hi?"":fmt(runs(sc_.filter(e=>e.s===lo).map(e=>e.h))));
+ $("w2").textContent=t.w2(hi>=2?fmt(runs(sc_.filter(e=>e.s===hi).map(e=>e.h))):"")}
+const s=$("score");s.style.background=COL[x.s];s.style.color=x.s===1?"#222":"#fff";
+$("sb").textContent=t.lv[x.s]+" — "+t.hd[x.s];$("sm").textContent=t.meta(x);
+const ad=[];if(x.h>=1)ad.push(t.heat);if(x.r>=2)ad.push(t.air);if(x.s>=2)ad.push(t.sev);
+$("advice").innerHTML=ad.map(z=>"<li></li>").join("");[...$("advice").children].forEach((li,i)=>li.textContent=ad[i])}
+$("job").innerHTML=JOBS.map(()=>"<option></option>").join("");
+$("le").onclick=()=>{L="en";$("le").className="on";$("lh").className="";render()};
+$("lh").onclick=()=>{L="hi";$("lh").className="on";$("le").className="";render()};
+["sc","job","al","hr","mt","mr","mp"].forEach(i=>$(i).addEventListener("input",render));
+$("job").selectedIndex=0;render();
+</script></body></html>
